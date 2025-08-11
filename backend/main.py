@@ -53,11 +53,17 @@ async def health_check():
 @app.exception_handler(Exception)
 async def global_exception_handler(request, exc):
     """Global exception handler for unhandled errors."""
+    import traceback
+    error_details = traceback.format_exc()
+    print(f"❌ Global error handler caught: {str(exc)}")
+    print(f"❌ Full traceback:\n{error_details}")
+    
     return JSONResponse(
         status_code=500,
         content={
             "detail": "Internal server error",
-            "message": str(exc) if settings.debug else "An unexpected error occurred"
+            "message": str(exc),
+            "traceback": error_details if settings.debug else "Traceback hidden in production"
         }
     )
 

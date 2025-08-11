@@ -42,41 +42,72 @@ class ChatService:
         conversation.messages.append(user_message)
         
         # Validate if question is movie industry related
-        if not self.llm_service.validate_movie_industry_question(request.message):
+        print(f"🔍 Validating movie industry question...")
+        try:
+            is_movie_question = self.llm_service.validate_movie_industry_question(request.message)
+            print(f"✅ Movie industry validation: {is_movie_question}")
+        except Exception as e:
+            print(f"❌ Error in movie industry validation: {str(e)}")
+            is_movie_question = True  # Default to allowing the question
+        
+        if not is_movie_question:
             response_content = (
                 "I'm specialized in movie industry topics. Please ask me about "
                 "pre-production, production, or post-production processes, filmmaking "
                 "techniques, industry practices, or any other movie-related questions."
             )
+            print(f"✅ Non-movie question handled")
         else:
             # Search for relevant context in local knowledge base
-            local_context_results = await self.knowledge_service.search_context(
-                request.message, 
-                max_results=3
-            )
+            print(f"🔍 Searching local knowledge base...")
+            try:
+                local_context_results = await self.knowledge_service.search_context(
+                    request.message, 
+                    max_results=3
+                )
+                print(f"✅ Local search complete: {len(local_context_results)} results")
+            except Exception as e:
+                print(f"❌ Error in local search: {str(e)}")
+                local_context_results = []
             
             # Search for current information online
-            web_search_results = await self.web_search_service.search_movie_industry(
-                request.message,
-                max_results=2
-            )
+            print(f"🔍 Searching web for current information...")
+            try:
+                web_search_results = await self.web_search_service.search_movie_industry(
+                    request.message,
+                    max_results=2
+                )
+                print(f"✅ Web search complete: {len(web_search_results)} results")
+            except Exception as e:
+                print(f"❌ Error in web search: {str(e)}")
+                web_search_results = []
             
             # Combine local and web results
             context_results = local_context_results + web_search_results
+            print(f"✅ Combined context: {len(context_results)} total results")
             
             # Prepare context for LLM
+            print(f"🔍 Preparing context for LLM...")
             context = self._prepare_context(context_results)
+            print(f"✅ Context prepared: {len(context)} characters")
             
             # Generate LLM response
-            llm_response = await self.llm_service.generate_response(
-                messages=conversation.messages[-settings.max_conversation_history:],
-                context=context,
-                temperature=request.temperature,
-                max_tokens=request.max_tokens
-            )
-            
-            response_content = llm_response['response']
-            tokens_used = llm_response['tokens_used']
+            print(f"🔍 Generating LLM response...")
+            try:
+                llm_response = await self.llm_service.generate_response(
+                    messages=conversation.messages[-settings.max_conversation_history:],
+                    context=context,
+                    temperature=request.temperature,
+                    max_tokens=request.max_tokens
+                )
+                print(f"✅ LLM response generated")
+                
+                response_content = llm_response['response']
+                tokens_used = llm_response['tokens_used']
+                print(f"✅ Response content extracted: {len(response_content)} characters")
+            except Exception as e:
+                print(f"❌ Error in LLM response generation: {str(e)}")
+                raise e
             
             # Validate response to prevent hallucinations
             validation_result = self.response_validator.validate_response(
@@ -115,6 +146,8 @@ class ChatService:
         
         # Calculate response time
         response_time = (datetime.now() - start_time).total_seconds()
+        
+        print(f"✅ Chat processing complete in {response_time:.2f}s")
         
         return ChatResponse(
             response=response_content,
