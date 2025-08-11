@@ -29,22 +29,47 @@ class WebSearchService:
             List of search results with content and metadata
         """
         try:
+            print(f"🌐 Starting web search for: {query}")
             # Add movie industry context to the query
             enhanced_query = f"movie industry {query}"
+            print(f"🌐 Enhanced query: {enhanced_query}")
             
             # Search using DuckDuckGo (free, no API key required)
+            print(f"🌐 Searching DuckDuckGo...")
             search_results = []
-            for result in self.ddgs.text(enhanced_query, max_results=max_results):
-                search_results.append({
-                    'title': result.get('title', ''),
-                    'url': result.get('link', ''),
-                    'snippet': result.get('body', ''),
-                    'source_type': 'web_search'
-                })
+            
+            try:
+                for result in self.ddgs.text(enhanced_query, max_results=max_results):
+                    print(f"🌐 Raw result: {result}")
+                    search_results.append({
+                        'title': result.get('title', ''),
+                        'url': result.get('link', ''),
+                        'snippet': result.get('body', ''),
+                        'source_type': 'web_search'
+                    })
+                print(f"🌐 Found {len(search_results)} search results")
+            except Exception as search_error:
+                print(f"❌ DuckDuckGo search error: {str(search_error)}")
+                # Fallback: try a simpler search
+                try:
+                    print(f"🌐 Trying fallback search...")
+                    for result in self.ddgs.text(query, max_results=max_results):
+                        search_results.append({
+                            'title': result.get('title', ''),
+                            'url': result.get('link', ''),
+                            'snippet': result.get('body', ''),
+                            'source_type': 'web_search'
+                        })
+                    print(f"🌐 Fallback search found {len(search_results)} results")
+                except Exception as fallback_error:
+                    print(f"❌ Fallback search also failed: {str(fallback_error)}")
+                    return []
             
             # Enhance results with content extraction
+            print(f"🌐 Enhancing {len(search_results)} search results...")
             enhanced_results = []
-            for result in search_results:
+            for i, result in enumerate(search_results):
+                print(f"🌐 Processing result {i+1}: {result.get('title', 'No title')}")
                 try:
                     # Extract more content from the webpage
                     content = await self._extract_webpage_content(result['url'])
@@ -52,8 +77,14 @@ class WebSearchService:
                         result['content'] = content
                         result['word_count'] = len(content.split())
                         enhanced_results.append(result)
+                        print(f"🌐 Successfully extracted content: {len(content)} characters")
+                    else:
+                        print(f"🌐 No content extracted, using snippet")
+                        result['content'] = result['snippet']
+                        result['word_count'] = len(result['snippet'].split())
+                        enhanced_results.append(result)
                 except Exception as e:
-                    print(f"Error extracting content from {result['url']}: {e}")
+                    print(f"❌ Error extracting content from {result['url']}: {e}")
                     # Still include the result with just the snippet
                     result['content'] = result['snippet']
                     result['word_count'] = len(result['snippet'].split())
@@ -62,6 +93,7 @@ class WebSearchService:
                 # Rate limiting to be respectful
                 await asyncio.sleep(1)
             
+            print(f"🌐 Final enhanced results: {len(enhanced_results)}")
             return enhanced_results[:max_results]
             
         except Exception as e:
