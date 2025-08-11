@@ -8,12 +8,12 @@ class LLMService:
     """Service for interacting with OpenAI's LLM API."""
     
     def __init__(self):
-        openai.api_key = settings.openai_api_key
+        self.client = openai.OpenAI(api_key=settings.openai_api_key)
         self.model = settings.openai_model
         self.temperature = settings.openai_temperature
         self.max_tokens = settings.openai_max_tokens
     
-    async def generate_response(
+    def generate_response(
         self,
         messages: List[ChatMessage],
         context: Optional[str] = None,
@@ -58,12 +58,11 @@ class LLMService:
             })
         
         try:
-            response = await openai.ChatCompletion.acreate(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=openai_messages,
                 temperature=temperature or self.temperature,
-                max_tokens=max_tokens or self.max_tokens,
-                stream=False
+                max_tokens=max_tokens or self.max_tokens
             )
             
             response_time = time.time() - start_time

@@ -94,7 +94,7 @@ class ChatService:
             # Generate LLM response
             print(f"🔍 Generating LLM response...")
             try:
-                llm_response = await self.llm_service.generate_response(
+                llm_response = self.llm_service.generate_response(
                     messages=conversation.messages[-settings.max_conversation_history:],
                     context=context,
                     temperature=request.temperature,
