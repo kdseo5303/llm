@@ -31,6 +31,7 @@ class ChatResponse(BaseModel):
     sources: Optional[List[Dict[str, Any]]] = None
     tokens_used: Optional[int] = None
     response_time: float
+    validation: Optional[Dict[str, Any]] = None
     timestamp: datetime = Field(default_factory=datetime.now)
 
 class Conversation(BaseModel):

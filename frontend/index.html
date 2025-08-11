@@ -87,6 +87,75 @@
             border-bottom-left-radius: 5px;
         }
 
+        .message.assistant .message-content.warning {
+            border-left: 4px solid #ffc107;
+            background: #fffbf0;
+        }
+
+        .message.assistant .message-content.low-confidence {
+            border-left: 4px solid #dc3545;
+            background: #f8f9fa;
+        }
+
+        .confidence-indicator {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .confidence-high {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .confidence-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .confidence-low {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .validation-summary {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+
+        .validation-summary h4 {
+            margin: 0 0 10px 0;
+            color: #495057;
+            font-size: 1em;
+        }
+
+        .validation-summary ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+
+        .validation-summary li {
+            margin-bottom: 5px;
+            color: #6c757d;
+        }
+
+        .loading-message {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+        }
+
+        .loading-message .loading {
+            margin: 0 auto 10px auto;
+        }
+
         .message-time {
             font-size: 0.8em;
             opacity: 0.7;
@@ -447,10 +516,13 @@
             addMessage(message, 'user');
             input.value = '';
 
+            // Add loading message
+            const loadingId = addLoadingMessage();
+
             // Disable input and show loading
             input.disabled = true;
             button.disabled = true;
-            buttonText.innerHTML = '<div class="loading"></div>';
+            buttonText.innerHTML = '<div class="loading"></div> Processing...';
 
             try {
                 const response = await fetch(`${API_BASE_URL}/chat`, {
@@ -474,11 +546,15 @@
                 // Update conversation ID
                 currentConversationId = data.conversation_id;
                 
-                // Add assistant response
-                addMessage(data.response, 'assistant', data.sources, data.response_time);
+                // Remove loading message
+                removeLoadingMessage(loadingId);
+                
+                // Add assistant response with validation info
+                addMessage(data.response, 'assistant', data.sources, data.response_time, data.validation);
                 
             } catch (error) {
                 console.error('Error:', error);
+                removeLoadingMessage(loadingId);
                 addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
             } finally {
                 // Re-enable input
@@ -489,12 +565,58 @@
             }
         }
 
-        function addMessage(content, role, sources = null, responseTime = null) {
+        function addLoadingMessage() {
+            const chatContainer = document.getElementById('chatContainer');
+            const loadingDiv = document.createElement('div');
+            const loadingId = 'loading-' + Date.now();
+            loadingDiv.id = loadingId;
+            loadingDiv.className = 'message assistant';
+            loadingDiv.innerHTML = `
+                <div class="message-content loading-message">
+                    <div class="loading"></div>
+                    <div>🤖 AI Agent is thinking...</div>
+                    <div style="font-size: 0.8em; margin-top: 10px;">
+                        🔍 Searching knowledge base<br>
+                        ✅ Validating response<br>
+                        🛡️ Preventing hallucinations
+                    </div>
+                </div>
+            `;
+            
+            chatContainer.appendChild(loadingDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            return loadingId;
+        }
+
+        function removeLoadingMessage(loadingId) {
+            const loadingElement = document.getElementById(loadingId);
+            if (loadingElement) {
+                loadingElement.remove();
+            }
+        }
+
+        function addMessage(content, role, sources = null, responseTime = null, validation = null) {
             const chatContainer = document.getElementById('chatContainer');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${role}`;
             
             const time = new Date().toLocaleTimeString();
+            
+            // Determine message styling based on validation
+            let messageClass = '';
+            let confidenceIndicator = '';
+            
+            if (validation && role === 'assistant') {
+                if (validation.confidence_score < 0.7) {
+                    messageClass = 'low-confidence';
+                    confidenceIndicator = `<div class="confidence-indicator confidence-low">⚠️ Low Confidence: ${(validation.confidence_score * 100).toFixed(0)}%</div>`;
+                } else if (validation.confidence_score < 0.8) {
+                    messageClass = 'warning';
+                    confidenceIndicator = `<div class="confidence-indicator confidence-medium">⚠️ Medium Confidence: ${(validation.confidence_score * 100).toFixed(0)}%</div>`;
+                } else {
+                    confidenceIndicator = `<div class="confidence-indicator confidence-high">✅ High Confidence: ${(validation.confidence_score * 100).toFixed(0)}%</div>`;
+                }
+            }
             
             let sourcesHtml = '';
             if (sources && sources.length > 0) {
@@ -511,7 +633,8 @@
             }
             
             messageDiv.innerHTML = `
-                <div class="message-content">
+                <div class="message-content ${messageClass}">
+                    ${confidenceIndicator}
                     ${content}
                     ${sourcesHtml}
                     <div class="message-time">${time}${timeInfo}</div>

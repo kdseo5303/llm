@@ -4,6 +4,7 @@ from datetime import datetime
 from ..models.chat import ChatMessage, MessageRole, ChatRequest, ChatResponse, Conversation
 from .llm_service import LLMService
 from .knowledge_service import KnowledgeService
+from .response_validator import ResponseValidator
 from ..core.config import settings
 
 class ChatService:
@@ -12,6 +13,7 @@ class ChatService:
     def __init__(self):
         self.llm_service = LLMService()
         self.knowledge_service = KnowledgeService()
+        self.response_validator = ResponseValidator()
         self.conversations: Dict[str, Conversation] = {}
     
     async def process_chat_request(self, request: ChatRequest) -> ChatResponse:
@@ -64,6 +66,22 @@ class ChatService:
             
             response_content = llm_response['response']
             tokens_used = llm_response['tokens_used']
+            
+            # Validate response to prevent hallucinations
+            validation_result = self.response_validator.validate_response(
+                response_content, 
+                context_results, 
+                request.message
+            )
+            
+            # Add validation summary to response if there are warnings
+            if validation_result['warnings'] or validation_result['confidence_score'] < 0.8:
+                validation_summary = self.response_validator.generate_validation_summary(validation_result)
+                response_content += f"\n\n--- Validation Summary ---\n{validation_summary}"
+                
+                # If confidence is too low, add a warning
+                if validation_result['confidence_score'] < 0.7:
+                    response_content = f"⚠️ WARNING: This response has low confidence and may contain unverified information.\n\n{response_content}"
         else:
             tokens_used = None
         
@@ -90,7 +108,8 @@ class ChatService:
             conversation_id=conversation_id,
             sources=sources,
             tokens_used=tokens_used,
-            response_time=response_time
+            response_time=response_time,
+            validation=validation_result if 'validation_result' in locals() else None
         )
     
     def _get_or_create_conversation(self, conversation_id: str) -> Conversation:
