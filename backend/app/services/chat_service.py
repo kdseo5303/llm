@@ -93,7 +93,9 @@ class ChatService:
                 # If confidence is too low, add a warning
                 if validation_result['confidence_score'] < 0.7:
                     response_content = f"⚠️ WARNING: This response has low confidence and may contain unverified information.\n\n{response_content}"
-        else:
+        
+        # Set tokens_used if not already set
+        if 'tokens_used' not in locals():
             tokens_used = None
         
         # Add assistant response to conversation
