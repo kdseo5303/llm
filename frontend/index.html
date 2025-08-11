@@ -96,6 +96,45 @@
             border-left: 4px solid #dc3545;
             background: #f8f9fa;
         }
+        
+        /* Enhanced formatting for better readability */
+        .message-content h1, .message-content h2, .message-content h3 {
+            color: #2c3e50;
+            margin: 20px 0 10px 0;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+        
+        .message-content h1 { font-size: 1.5em; }
+        .message-content h2 { font-size: 1.3em; }
+        .message-content h3 { font-size: 1.1em; }
+        
+        .message-content ul, .message-content ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        
+        .message-content li {
+            margin: 8px 0;
+            line-height: 1.5;
+        }
+        
+        .message-content p {
+            margin: 15px 0;
+        }
+        
+        .message-content strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .message-content blockquote {
+            border-left: 4px solid #667eea;
+            padding-left: 15px;
+            margin: 15px 0;
+            font-style: italic;
+            color: #6c757d;
+        }
 
         .confidence-indicator {
             display: inline-block;
@@ -128,6 +167,28 @@
             padding: 15px;
             margin-top: 15px;
             font-size: 0.9em;
+            border-left: 4px solid #17a2b8;
+        }
+        
+        .validation-summary.collapsible {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .validation-summary.collapsible:hover {
+            background: #e9ecef;
+        }
+        
+        .validation-summary .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+        }
+        
+        .validation-summary .summary-content {
+            margin-top: 10px;
         }
 
         .validation-summary h4 {
@@ -659,10 +720,30 @@
                 timeInfo = ` • Response time: ${responseTime.toFixed(2)}s`;
             }
             
+            // Format the content for better readability
+            let formattedContent = content;
+            if (role === 'assistant') {
+                // Add line breaks for better formatting
+                formattedContent = content
+                    .replace(/\n\n/g, '</p><p>')
+                    .replace(/\n/g, '<br>');
+                
+                // Wrap in paragraphs for better structure
+                formattedContent = `<p>${formattedContent}</p>`;
+                
+                // Convert markdown-style formatting
+                formattedContent = formattedContent
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                    .replace(/^# (.*$)/gm, '<h1>$1</h1>');
+            }
+            
             messageDiv.innerHTML = `
                 <div class="message-content ${messageClass}">
                     ${confidenceIndicator}
-                    ${content}
+                    ${formattedContent}
                     ${sourcesHtml}
                     <div class="message-time">${time}${timeInfo}</div>
                 </div>
