@@ -1,0 +1,1 @@
+# Core configuration and utilities for the Movie Industry LLM Agent 

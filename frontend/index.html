@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Industry LLM Agent</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .chat-container {
+            height: 500px;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .message {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.assistant {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 15px 20px;
+            border-radius: 20px;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            color: #333;
+            border: 1px solid #e9ecef;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-time {
+            font-size: 0.8em;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 15px 20px;
+            border: 2px solid #e9ecef;
+            border-radius: 25px;
+            font-size: 1em;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .message-input:focus {
+            border-color: #667eea;
+        }
+
+        .send-button {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .send-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .sources {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #666;
+        }
+
+        .source-item {
+            background: #f8f9fa;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 8px;
+            border-left: 3px solid #667eea;
+        }
+
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 10px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        .conversation-controls {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .control-button {
+            padding: 8px 16px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .control-button:hover {
+            background: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Movie Industry LLM Agent</h1>
+            <p>Ask me anything about pre-production, production, or post-production!</p>
+        </div>
+
+        <div class="conversation-controls">
+            <button class="control-button" onclick="newConversation()">New Chat</button>
+            <button class="control-button" onclick="clearConversation()">Clear Chat</button>
+        </div>
+
+        <div class="chat-container" id="chatContainer">
+            <div class="message assistant">
+                <div class="message-content">
+                    Hello! I'm your Movie Industry AI assistant. I can help you with questions about:
+                    <br><br>
+                    🎭 <strong>Pre-production:</strong> Script development, casting, budgeting, scheduling
+                    <br>
+                    🎬 <strong>Production:</strong> Filming, directing, cinematography, sound recording
+                    <br>
+                    ✂️ <strong>Post-production:</strong> Editing, visual effects, sound mixing, color grading
+                    <br><br>
+                    What would you like to know about the movie industry?
+                </div>
+            </div>
+        </div>
+
+        <div class="input-container">
+            <div class="input-group">
+                <input 
+                    type="text" 
+                    class="message-input" 
+                    id="messageInput" 
+                    placeholder="Ask about the movie industry..."
+                    onkeypress="handleKeyPress(event)"
+                >
+                <button class="send-button" id="sendButton" onclick="sendMessage()">
+                    <span id="buttonText">Send</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentConversationId = null;
+        const API_BASE_URL = 'http://localhost:8000/api/v1';
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const button = document.getElementById('sendButton');
+            const buttonText = document.getElementById('buttonText');
+            const message = input.value.trim();
+
+            if (!message) return;
+
+            // Add user message to chat
+            addMessage(message, 'user');
+            input.value = '';
+
+            // Disable input and show loading
+            input.disabled = true;
+            button.disabled = true;
+            buttonText.innerHTML = '<div class="loading"></div>';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        conversation_id: currentConversationId,
+                        include_sources: true
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                // Update conversation ID
+                currentConversationId = data.conversation_id;
+                
+                // Add assistant response
+                addMessage(data.response, 'assistant', data.sources, data.response_time);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage('Sorry, I encountered an error. Please try again.', 'assistant');
+            } finally {
+                // Re-enable input
+                input.disabled = false;
+                button.disabled = false;
+                buttonText.textContent = 'Send';
+                input.focus();
+            }
+        }
+
+        function addMessage(content, role, sources = null, responseTime = null) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const time = new Date().toLocaleTimeString();
+            
+            let sourcesHtml = '';
+            if (sources && sources.length > 0) {
+                sourcesHtml = '<div class="sources"><strong>Sources:</strong>';
+                sources.forEach(source => {
+                    sourcesHtml += `<div class="source-item">📄 ${source.title} (${source.category}) - Relevance: ${source.relevance_score}</div>`;
+                });
+                sourcesHtml += '</div>';
+            }
+            
+            let timeInfo = '';
+            if (responseTime) {
+                timeInfo = ` • Response time: ${responseTime.toFixed(2)}s`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    ${content}
+                    ${sourcesHtml}
+                    <div class="message-time">${time}${timeInfo}</div>
+                </div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function newConversation() {
+            currentConversationId = null;
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = `
+                <div class="message assistant">
+                    <div class="message-content">
+                        Hello! I'm your Movie Industry AI assistant. I can help you with questions about:
+                        <br><br>
+                        🎭 <strong>Pre-production:</strong> Script development, casting, budgeting, scheduling
+                        <br>
+                        🎬 <strong>Production:</strong> Filming, directing, cinematography, sound recording
+                        <br>
+                        ✂️ <strong>Post-production:</strong> Editing, visual effects, sound mixing, color grading
+                        <br><br>
+                        What would you like to know about the movie industry?
+                    </div>
+                </div>
+            `;
+        }
+
+        function clearConversation() {
+            if (currentConversationId) {
+                fetch(`${API_BASE_URL}/chat/conversations/${currentConversationId}/clear`, {
+                    method: 'POST'
+                }).then(() => {
+                    newConversation();
+                }).catch(error => {
+                    console.error('Error clearing conversation:', error);
+                });
+            } else {
+                newConversation();
+            }
+        }
+
+        // Focus input on page load
+        window.onload = function() {
+            document.getElementById('messageInput').focus();
+        };
+    </script>
+</body>
+</html> 

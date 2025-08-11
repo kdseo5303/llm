@@ -1,0 +1,10 @@
+# OpenAI Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Application Configuration
+DEBUG=true
+
+# Optional: Override default settings
+# OPENAI_MODEL=gpt-4
+# OPENAI_TEMPERATURE=0.7
+# OPENAI_MAX_TOKENS=1000 
