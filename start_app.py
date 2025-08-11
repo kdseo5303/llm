@@ -57,7 +57,7 @@ def start_backend():
     try:
         # Start the server in the background
         process = subprocess.Popen(
-            ["uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
+            ["python3", "-m", "uvicorn", "main:app", "--reload", "--host", "0.0.0.0", "--port", "8000"],
             cwd=backend_dir,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE

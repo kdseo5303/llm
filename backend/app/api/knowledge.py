@@ -49,7 +49,7 @@ async def add_document(
             tag_list = [tag.strip() for tag in tags.split(",")]
         
         # Validate category
-        valid_categories = ["pre-production", "production", "post-production"]
+        valid_categories = ["pre-production", "production", "post-production", "all"]
         if category not in valid_categories:
             raise HTTPException(
                 status_code=400, 
@@ -98,7 +98,7 @@ async def upload_text_file(
             tag_list = [tag.strip() for tag in tags.split(",")]
         
         # Validate category
-        valid_categories = ["pre-production", "production", "post-production"]
+        valid_categories = ["pre-production", "production", "post-production", "all"]
         if category not in valid_categories:
             raise HTTPException(
                 status_code=400, 
@@ -152,7 +152,7 @@ async def upload_any_file(
             raise HTTPException(status_code=400, detail=error_message)
         
         # Validate category
-        valid_categories = ["pre-production", "production", "post-production"]
+        valid_categories = ["pre-production", "production", "post-production", "all"]
         if category not in valid_categories:
             raise HTTPException(
                 status_code=400, 

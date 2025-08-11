@@ -146,10 +146,11 @@ The system now supports multiple file formats for easy knowledge ingestion:
 
 - **Web Interface**: Upload files directly through the chat interface
 - **Automatic Processing**: Files are automatically converted to searchable text
-- **Smart Categorization**: Choose from pre-production, production, or post-production
+- **Smart Categorization**: Choose from pre-production, production, post-production, or all stages
 - **Tagging System**: Add custom tags for better organization
 - **Size Limits**: Support for files up to 50MB
 - **Multi-sheet Excel**: Each sheet becomes a separate knowledge document
+- **Cross-Stage Access**: Documents marked as "all stages" are accessible across all movie industry phases
 
 The system automatically categorizes documents based on folder structure or your selection during upload.
 
