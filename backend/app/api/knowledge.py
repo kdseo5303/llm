@@ -3,6 +3,7 @@ from typing import List, Optional
 from ..models.chat import KnowledgeDocument
 from ..services.knowledge_service import KnowledgeService
 import uuid
+import os
 
 router = APIRouter(prefix="/knowledge", tags=["knowledge"])
 
@@ -122,6 +123,85 @@ async def upload_text_file(
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error uploading file: {str(e)}")
+
+@router.post("/upload-file")
+async def upload_any_file(
+    file: UploadFile = File(...),
+    category: str = Form(...),
+    tags: Optional[str] = Form(None)
+):
+    """
+    Upload any supported file format to the knowledge base.
+    
+    Supported formats: Excel (.xlsx, .xls), CSV, Word (.docx), PDF, Text (.txt)
+    
+    Args:
+        file: File to upload
+        category: Document category (pre-production, production, post-production)
+        tags: Comma-separated tags (optional)
+    """
+    try:
+        # Validate file size
+        file_size = 0
+        file_content = await file.read()
+        file_size = len(file_content)
+        
+        # Validate file
+        is_valid, error_message = knowledge_service.validate_uploaded_file(file.filename, file_size)
+        if not is_valid:
+            raise HTTPException(status_code=400, detail=error_message)
+        
+        # Validate category
+        valid_categories = ["pre-production", "production", "post-production"]
+        if category not in valid_categories:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"Invalid category. Must be one of: {', '.join(valid_categories)}"
+            )
+        
+        # Parse tags if provided
+        tag_list = []
+        if tags:
+            tag_list = [tag.strip() for tag in tags.split(",")]
+        
+        # Process the file
+        documents = await knowledge_service.process_uploaded_file(
+            file_content, 
+            file.filename, 
+            category
+        )
+        
+        # Add tags to each document
+        for doc in documents:
+            doc.tags.extend(tag_list)
+        
+        return {
+            "message": f"File processed successfully. Created {len(documents)} document(s).",
+            "documents": documents,
+            "filename": file.filename,
+            "category": category,
+            "file_size_mb": round(file_size / (1024 * 1024), 2)
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@router.get("/supported-formats")
+async def get_supported_formats():
+    """Get list of supported file formats for upload."""
+    try:
+        formats = knowledge_service.get_supported_file_formats()
+        size_limit_mb = knowledge_service.get_file_size_limit() / (1024 * 1024)
+        
+        return {
+            "supported_formats": formats,
+            "file_size_limit_mb": size_limit_mb,
+            "description": "Supported file formats for knowledge base uploads"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error retrieving supported formats: {str(e)}")
 
 @router.delete("/{document_id}")
 async def delete_document(document_id: str):

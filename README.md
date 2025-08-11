@@ -118,6 +118,8 @@ The agent is designed to answer questions about:
 - `GET /api/v1/knowledge` - List all documents
 - `POST /api/v1/knowledge` - Add new document
 - `POST /api/v1/knowledge/upload-text` - Upload text file
+- `POST /api/v1/knowledge/upload-file` - Upload any supported file format
+- `GET /api/v1/knowledge/supported-formats` - Get supported file formats
 - `GET /api/v1/knowledge/search` - Search documents
 - `GET /api/v1/knowledge/stats` - Get knowledge base statistics
 
@@ -128,8 +130,28 @@ You can add your own movie industry knowledge by:
 1. **Adding text files** to the `knowledge_base/` directory
 2. **Using the API** to upload documents
 3. **Organizing by category**: pre-production, production, post-production
+4. **Uploading files directly** through the web interface
 
-The system automatically categorizes documents based on folder structure.
+### Supported File Formats
+
+The system now supports multiple file formats for easy knowledge ingestion:
+
+- **📊 Excel (.xlsx, .xls)** - Multiple sheets supported, automatically converted to text
+- **📋 CSV (.csv)** - Comma-separated values, structured data
+- **📝 Word (.docx)** - Documents with tables and formatted text
+- **📄 PDF (.pdf)** - Multi-page documents, text extraction
+- **📄 Text (.txt)** - Plain text files
+
+### File Upload Features
+
+- **Web Interface**: Upload files directly through the chat interface
+- **Automatic Processing**: Files are automatically converted to searchable text
+- **Smart Categorization**: Choose from pre-production, production, or post-production
+- **Tagging System**: Add custom tags for better organization
+- **Size Limits**: Support for files up to 50MB
+- **Multi-sheet Excel**: Each sheet becomes a separate knowledge document
+
+The system automatically categorizes documents based on folder structure or your selection during upload.
 
 ## Development Roadmap
 

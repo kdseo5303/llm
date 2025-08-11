@@ -6,6 +6,7 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 from ..core.config import settings
 from ..models.chat import KnowledgeDocument
+from .file_processor import FileProcessor
 import hashlib
 
 class KnowledgeService:
@@ -27,6 +28,9 @@ class KnowledgeService:
             name="movie_industry_knowledge",
             metadata={"description": "Movie industry knowledge base"}
         )
+        
+        # Initialize file processor
+        self.file_processor = FileProcessor()
         
         # Load existing documents
         self.documents: Dict[str, KnowledgeDocument] = {}
@@ -168,4 +172,42 @@ class KnowledgeService:
             del self.documents[doc_id]
             # Note: Vector DB cleanup would need more sophisticated handling
             return True
-        return False 
+        return False
+    
+    async def process_uploaded_file(self, file_content: bytes, filename: str, category: str) -> List[KnowledgeDocument]:
+        """
+        Process an uploaded file and add it to the knowledge base.
+        
+        Args:
+            file_content: File content as bytes
+            filename: Original filename
+            category: Document category
+            
+        Returns:
+            List of processed KnowledgeDocument objects
+        """
+        try:
+            # Process the file
+            documents = await self.file_processor.process_file(file_content, filename, category)
+            
+            # Add each document to the knowledge base
+            for doc in documents:
+                self.documents[doc.id] = doc
+                self._add_to_vector_db(doc)
+            
+            return documents
+            
+        except Exception as e:
+            raise Exception(f"Error processing uploaded file: {str(e)}")
+    
+    def get_supported_file_formats(self) -> List[str]:
+        """Get list of supported file formats."""
+        return self.file_processor.get_supported_formats()
+    
+    def get_file_size_limit(self) -> int:
+        """Get maximum file size limit."""
+        return self.file_processor.get_file_size_limit()
+    
+    def validate_uploaded_file(self, filename: str, file_size: int) -> tuple[bool, str]:
+        """Validate uploaded file before processing."""
+        return self.file_processor.validate_file(filename, file_size) 

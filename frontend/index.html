@@ -199,6 +199,139 @@
         .control-button:hover {
             background: #5a6268;
         }
+
+        /* File Upload Styles */
+        .file-upload-section {
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            padding: 20px;
+        }
+
+        .upload-container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-container h3 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .upload-container p {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 20px;
+        }
+
+        .upload-form {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 5px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #667eea;
+            outline: none;
+        }
+
+        .upload-button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .upload-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+        }
+
+        .upload-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .upload-info {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .upload-info h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .upload-info ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .upload-info li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f3f4;
+            color: #6c757d;
+        }
+
+        .upload-info li:last-child {
+            border-bottom: none;
+        }
+
+        .upload-status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .upload-status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .upload-status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .upload-status.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
     </style>
 </head>
 <body>
@@ -211,6 +344,53 @@
         <div class="conversation-controls">
             <button class="control-button" onclick="newConversation()">New Chat</button>
             <button class="control-button" onclick="clearConversation()">Clear Chat</button>
+            <button class="control-button" onclick="toggleFileUpload()">Upload Files</button>
+        </div>
+
+        <div class="file-upload-section" id="fileUploadSection" style="display: none;">
+            <div class="upload-container">
+                <h3>📁 Upload Knowledge Files</h3>
+                <p>Upload Excel, CSV, Word, PDF, or text files to expand the AI's knowledge base.</p>
+                
+                <div class="upload-form">
+                    <div class="form-group">
+                        <label for="fileInput">Select File:</label>
+                        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv,.txt,.docx,.pdf" onchange="handleFileSelect(event)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="categorySelect">Category:</label>
+                        <select id="categorySelect">
+                            <option value="pre-production">Pre-production</option>
+                            <option value="production">Production</option>
+                            <option value="post-production">Post-production</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="tagsInput">Tags (optional):</label>
+                        <input type="text" id="tagsInput" placeholder="budget, scheduling, casting (comma-separated)">
+                    </div>
+                    
+                    <button class="upload-button" onclick="uploadFile()" id="uploadButton" disabled>
+                        Upload File
+                    </button>
+                </div>
+                
+                <div class="upload-info">
+                    <h4>Supported Formats:</h4>
+                    <ul>
+                        <li>📊 Excel (.xlsx, .xls) - Multiple sheets supported</li>
+                        <li>📋 CSV (.csv) - Comma-separated values</li>
+                        <li>📝 Word (.docx) - Document with tables and text</li>
+                        <li>📄 PDF (.pdf) - Multi-page documents</li>
+                        <li>📄 Text (.txt) - Plain text files</li>
+                    </ul>
+                    <p><strong>File size limit:</strong> 50MB</p>
+                </div>
+                
+                <div id="uploadStatus" class="upload-status" style="display: none;"></div>
+            </div>
         </div>
 
         <div class="chat-container" id="chatContainer">
@@ -380,6 +560,104 @@
         window.onload = function() {
             document.getElementById('messageInput').focus();
         };
+
+        // File upload functionality
+        let selectedFile = null;
+
+        function toggleFileUpload() {
+            const section = document.getElementById('fileUploadSection');
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+            } else {
+                section.style.display = 'none';
+            }
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                selectedFile = file;
+                document.getElementById('uploadButton').disabled = false;
+                
+                // Show file info
+                const status = document.getElementById('uploadStatus');
+                status.style.display = 'block';
+                status.className = 'upload-status info';
+                status.innerHTML = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(2)} MB)`;
+            }
+        }
+
+        async function uploadFile() {
+            if (!selectedFile) {
+                showUploadStatus('Please select a file first.', 'error');
+                return;
+            }
+
+            const category = document.getElementById('categorySelect').value;
+            const tags = document.getElementById('tagsInput').value;
+            const uploadButton = document.getElementById('uploadButton');
+            
+            // Disable upload button and show loading
+            uploadButton.disabled = true;
+            uploadButton.innerHTML = '<div class="loading"></div> Uploading...';
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('category', category);
+                if (tags.trim()) {
+                    formData.append('tags', tags.trim());
+                }
+
+                const response = await fetch(`${API_BASE_URL}/knowledge/upload-file`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Upload failed');
+                }
+
+                const result = await response.json();
+                
+                showUploadStatus(
+                    `✅ ${result.message}<br><br>
+                     📁 File: ${result.filename}<br>
+                     📂 Category: ${result.category}<br>
+                     📊 Size: ${result.file_size_mb} MB<br>
+                     📄 Documents created: ${result.documents.length}`,
+                    'success'
+                );
+
+                // Reset form
+                document.getElementById('fileInput').value = '';
+                selectedFile = null;
+                document.getElementById('tagsInput').value = '';
+                
+            } catch (error) {
+                console.error('Upload error:', error);
+                showUploadStatus(`❌ Upload failed: ${error.message}`, 'error');
+            } finally {
+                // Re-enable upload button
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload File';
+            }
+        }
+
+        function showUploadStatus(message, type) {
+            const status = document.getElementById('uploadStatus');
+            status.style.display = 'block';
+            status.className = `upload-status ${type}`;
+            status.innerHTML = message;
+            
+            // Auto-hide success messages after 5 seconds
+            if (type === 'success') {
+                setTimeout(() => {
+                    status.style.display = 'none';
+                }, 5000);
+            }
+        }
     </script>
 </body>
 </html> 
