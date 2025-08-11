@@ -236,6 +236,25 @@
             border-radius: 8px;
             border-left: 3px solid #667eea;
         }
+        
+        .source-item.web-source {
+            border-left-color: #28a745;
+            background: #f8fff9;
+        }
+        
+        .source-item.local-source {
+            border-left-color: #667eea;
+            background: #f8f9fa;
+        }
+        
+        .source-item a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        
+        .source-item a:hover {
+            text-decoration: underline;
+        }
 
         .error {
             background: #fee;
@@ -619,14 +638,21 @@
                 }
             }
             
-            let sourcesHtml = '';
-            if (sources && sources.length > 0) {
-                sourcesHtml = '<div class="sources"><strong>Sources:</strong>';
-                sources.forEach(source => {
-                    sourcesHtml += `<div class="source-item">📄 ${source.title} (${source.category}) - Relevance: ${source.relevance_score}</div>`;
-                });
-                sourcesHtml += '</div>';
-            }
+                       let sourcesHtml = '';
+           if (sources && sources.length > 0) {
+               sourcesHtml = '<div class="sources"><strong>Sources:</strong>';
+               sources.forEach(source => {
+                   const sourceIcon = source.source_type === 'web_search' ? '🌐' : '📄';
+                   const sourceType = source.source_type === 'web_search' ? 'Web Search' : source.category;
+                   const relevance = source.relevance_score ? ` - Relevance: ${source.relevance_score}` : '';
+                   const url = source.url ? ` - <a href="${source.url}" target="_blank" rel="noopener noreferrer">View Source</a>` : '';
+                   
+                   sourcesHtml += `<div class="source-item ${source.source_type === 'web_search' ? 'web-source' : 'local-source'}">
+                       ${sourceIcon} ${source.title} (${sourceType})${relevance}${url}
+                   </div>`;
+               });
+               sourcesHtml += '</div>';
+           }
             
             let timeInfo = '';
             if (responseTime) {

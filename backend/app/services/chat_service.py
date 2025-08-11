@@ -5,6 +5,7 @@ from ..models.chat import ChatMessage, MessageRole, ChatRequest, ChatResponse, C
 from .llm_service import LLMService
 from .knowledge_service import KnowledgeService
 from .response_validator import ResponseValidator
+from .web_search_service import WebSearchService
 from ..core.config import settings
 
 class ChatService:
@@ -14,6 +15,7 @@ class ChatService:
         self.llm_service = LLMService()
         self.knowledge_service = KnowledgeService()
         self.response_validator = ResponseValidator()
+        self.web_search_service = WebSearchService()
         self.conversations: Dict[str, Conversation] = {}
     
     async def process_chat_request(self, request: ChatRequest) -> ChatResponse:
@@ -47,11 +49,20 @@ class ChatService:
                 "techniques, industry practices, or any other movie-related questions."
             )
         else:
-            # Search for relevant context
-            context_results = await self.knowledge_service.search_context(
+            # Search for relevant context in local knowledge base
+            local_context_results = await self.knowledge_service.search_context(
                 request.message, 
                 max_results=3
             )
+            
+            # Search for current information online
+            web_search_results = await self.web_search_service.search_movie_industry(
+                request.message,
+                max_results=2
+            )
+            
+            # Combine local and web results
+            context_results = local_context_results + web_search_results
             
             # Prepare context for LLM
             context = self._prepare_context(context_results)

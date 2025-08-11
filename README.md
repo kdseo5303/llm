@@ -5,9 +5,11 @@ An intelligent chatbot agent specialized in answering questions about the movie 
 ## Features
 
 - **Focused Knowledge**: Specialized in movie industry information only
+- **Hybrid Information Access**: Combines local knowledge base with current web information
 - **Smart Context Retrieval**: Uses vector embeddings to find relevant information
 - **Conversation Memory**: Maintains context across chat sessions
-- **Source Attribution**: Shows which documents informed responses
+- **Source Attribution**: Shows which documents and web sources informed responses
+- **Web Search Integration**: Access current industry information with proper citations
 - **RESTful API**: Easy integration with frontend applications
 - **Beautiful Web Interface**: Modern, responsive chat interface
 
@@ -153,6 +155,17 @@ The system now supports multiple file formats for easy knowledge ingestion:
 - **Cross-Stage Access**: Documents marked as "all stages" are accessible across all movie industry phases
 
 The system automatically categorizes documents based on folder structure or your selection during upload.
+
+### Web Search Integration
+
+- **Current Information**: Access up-to-date movie industry news and trends
+- **Source Citations**: All web information includes proper source attribution with URLs
+- **Credibility Validation**: Web sources are validated for domain authority and credibility
+- **Hybrid Responses**: Combines your trusted local knowledge with current web information
+- **No Additional Costs**: Uses free DuckDuckGo search API for web queries
+- **Rate Limiting**: Respectful web scraping with built-in delays to avoid overwhelming servers
+
+**Note**: Web search results are clearly marked and include clickable links to original sources for verification.
 
 ## Development Roadmap
 

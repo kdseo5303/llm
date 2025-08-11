@@ -34,12 +34,20 @@ class ResponseValidator:
             'warnings': [],
             'source_coverage': 0.0,
             'unverified_claims': [],
-            'recommendations': []
+            'recommendations': [],
+            'source_types': {'local': 0, 'web': 0}
         }
         
         # Check if response cites sources
         source_citations = self._extract_source_citations(response)
         validation_result['source_coverage'] = len(source_citations) / max(len(context_sources), 1)
+        
+        # Count source types
+        for source in context_sources:
+            if source.get('source_type') == 'web_search':
+                validation_result['source_types']['web'] += 1
+            else:
+                validation_result['source_types']['local'] += 1
         
         # Validate source citations
         citation_validation = self._validate_citations(source_citations, context_sources)
@@ -211,6 +219,12 @@ class ResponseValidator:
     def generate_validation_summary(self, validation_result: Dict[str, Any]) -> str:
         """Generate a human-readable validation summary."""
         summary = f"Confidence Score: {validation_result['confidence_score']:.1%}\n"
+        
+        # Show source type breakdown
+        if 'source_types' in validation_result:
+            local_count = validation_result['source_types'].get('local', 0)
+            web_count = validation_result['source_types'].get('web', 0)
+            summary += f"\n📊 Sources: {local_count} local, {web_count} web search\n"
         
         if validation_result['warnings']:
             summary += "\n⚠️ Warnings:\n"
