@@ -23,6 +23,8 @@ class ChatRequest(BaseModel):
     include_sources: bool = True
     temperature: Optional[float] = None
     max_tokens: Optional[int] = None
+    use_fast_validation: bool = Field(default=True, description="Use fast validation for better performance. Set to False for comprehensive validation.")
+    use_turbo_mode: bool = Field(default=False, description="Enable turbo mode for maximum speed. Skips web search and validation for instant responses.")
 
 class ChatResponse(BaseModel):
     """Response model for chat endpoint."""

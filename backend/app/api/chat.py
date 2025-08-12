@@ -22,10 +22,27 @@ async def chat(request: ChatRequest):
     Returns:
         Chat response with AI-generated answer and metadata
     """
+    print(f"🚀 Chat endpoint called")
+    print(f"🔍 Request message: {request.message[:100]}...")
+    print(f"🔍 Request conversation_id: {request.conversation_id}")
+    print(f"🔍 Request temperature: {request.temperature}")
+    print(f"🔍 Request max_tokens: {request.max_tokens}")
+    print(f"🔍 Request include_sources: {request.include_sources}")
+    
     try:
+        print(f"🔍 Calling chat_service.process_chat_request...")
         response = await chat_service.process_chat_request(request)
+        print(f"✅ Chat service returned response successfully")
+        print(f"🔍 Response details:")
+        print(f"   - Response length: {len(response.response)}")
+        print(f"   - Conversation ID: {response.conversation_id}")
+        print(f"   - Sources count: {len(response.sources) if response.sources else 0}")
+        print(f"   - Response time: {response.response_time}")
         return response
     except Exception as e:
+        print(f"❌ Error in chat endpoint: {str(e)}")
+        import traceback
+        print(f"❌ Chat endpoint error traceback: {traceback.format_exc()}")
         raise HTTPException(status_code=500, detail=f"Error processing chat request: {str(e)}")
 
 @router.get("/conversations", response_model=List[Conversation])
